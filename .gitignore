@@ -1,0 +1,16 @@
+# Firebase CLI local state and logs
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Dependencies and operating-system files
+node_modules/
+.DS_Store
+
+# Local environment files and secrets
+.env
+.env.*
+*.local
+serviceAccount*.json
+*service-account*.json

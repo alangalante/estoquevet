@@ -1,0 +1,12 @@
+{
+  "name": "EstoqueVet",
+  "short_name": "EstoqueVet",
+  "description": "Controle de estoque veterinário",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f7f5",
+  "theme_color": "#176b5b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

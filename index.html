@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#176b5b" />
+    <meta name="description" content="Controle simples de estoque veterinário" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>EstoqueVet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <main>
+      <section id="loading-view" class="centered-view">
+        <div class="loader" aria-label="Carregando"></div>
+      </section>
+
+      <section id="setup-view" class="centered-view hidden">
+        <div class="auth-card setup-card">
+          <div class="brand-mark">EV</div>
+          <p class="eyebrow">Configuração necessária</p>
+          <h1>Conecte seu banco de dados</h1>
+          <p>Copie a configuração do aplicativo web do Firebase para o arquivo <code>firebase-config.js</code>. O passo a passo completo está no arquivo <code>README.md</code>.</p>
+        </div>
+      </section>
+
+      <section id="login-view" class="centered-view hidden">
+        <div class="auth-shell">
+          <div class="auth-intro">
+            <div class="brand-mark">EV</div>
+            <p class="eyebrow">Estoque veterinário</p>
+            <h1>Controle claro, sem complicação.</h1>
+            <p>Consulte saldos e registre cada entrada ou saída em poucos segundos.</p>
+          </div>
+          <form id="login-form" class="auth-card">
+            <h2>Entrar</h2>
+            <p class="muted">Use o acesso criado para sua equipe.</p>
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="username" required placeholder="nome@clinica.com" />
+            <label for="password">Senha</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" minlength="6" required placeholder="Sua senha" />
+            <button class="button primary full" type="submit">Entrar</button>
+            <p id="login-error" class="form-error" role="alert"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="app-view" class="app hidden">
+        <header class="topbar">
+          <div class="brand"><span class="brand-mark small">EV</span><span>EstoqueVet</span></div>
+          <div class="user-actions">
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-button" class="icon-button" type="button" title="Sair" aria-label="Sair">↗</button>
+          </div>
+        </header>
+
+        <div class="page">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Visão geral</p>
+              <h1>Estoque</h1>
+            </div>
+            <button id="export-button" class="button secondary" type="button">Exportar CSV</button>
+          </div>
+
+          <section class="summary-grid" aria-label="Resumo do estoque">
+            <article class="summary-card accent"><span>Unidades em estoque</span><strong id="total-units">0</strong></article>
+            <article class="summary-card"><span>Produtos cadastrados</span><strong id="total-products">0</strong></article>
+            <article class="summary-card warning"><span>Estoque baixo</span><strong id="low-products">0</strong></article>
+          </section>
+
+          <nav class="tabs" aria-label="Seções">
+            <button class="tab active" data-tab="inventory" type="button">Produtos</button>
+            <button class="tab" data-tab="history" type="button">Histórico</button>
+          </nav>
+
+          <section id="inventory-panel" class="panel">
+            <div class="toolbar">
+              <label class="search-box" for="search-input"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Buscar produto..." autocomplete="off" /></label>
+              <label class="check-filter"><input id="low-filter" type="checkbox" /> Somente estoque baixo</label>
+            </div>
+            <div id="empty-inventory" class="empty-state hidden">
+              <div class="empty-icon">＋</div>
+              <h2>Importar estoque inicial</h2>
+              <p>O banco está vazio. Importe os 32 produtos do arquivo original.</p>
+              <button id="seed-button" class="button primary" type="button">Importar produtos</button>
+            </div>
+            <div id="products-list" class="products-list"></div>
+            <p id="no-results" class="empty-message hidden">Nenhum produto encontrado.</p>
+          </section>
+
+          <section id="history-panel" class="panel hidden">
+            <div class="history-heading">
+              <div><h2>Últimas movimentações</h2><p class="muted">Entradas e saídas mais recentes.</p></div>
+            </div>
+            <div id="history-list" class="history-list"></div>
+            <p id="empty-history" class="empty-message hidden">Ainda não há movimentações.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="movement-dialog" class="dialog">
+      <form id="movement-form" method="dialog">
+        <div class="dialog-header">
+          <div><p id="movement-kind-label" class="eyebrow"></p><h2 id="movement-product"></h2></div>
+          <button id="close-dialog" class="icon-button" type="button" aria-label="Fechar">×</button>
+        </div>
+        <p class="stock-line">Estoque atual: <strong id="movement-current">0</strong></p>
+        <input id="movement-item-id" type="hidden" />
+        <input id="movement-kind" type="hidden" />
+        <label for="movement-quantity">Quantidade</label>
+        <input id="movement-quantity" type="number" min="1" step="1" inputmode="numeric" required />
+        <label for="movement-note">Observação <span class="optional">(opcional)</span></label>
+        <textarea id="movement-note" rows="3" maxlength="160" placeholder="Ex.: compra do fornecedor ou uso em atendimento"></textarea>
+        <p id="movement-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="cancel-movement" class="button secondary" type="button">Cancelar</button>
+          <button id="confirm-movement" class="button primary" type="submit">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
