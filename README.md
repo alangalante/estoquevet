@@ -1,6 +1,6 @@
 # EstoqueVet
 
-Aplicativo web simples para consultar o estoque e registrar entradas e saídas. Os dados ficam no Cloud Firestore e o acesso é protegido pelo Firebase Authentication.
+Aplicativo web para consultar estoque, registrar compras e vendas, apropriar custos pelo método PEPS e gerar relatórios financeiros por dia, semana ou mês. Os dados ficam no Cloud Firestore e o acesso é protegido pelo Firebase Authentication.
 
 ## O que você precisa fazer no Firebase
 
@@ -40,7 +40,9 @@ No segundo comando, selecione o projeto criado. Ao final, o Firebase mostrará u
 ## Segurança e dados
 
 - Apenas usuários autenticados podem consultar ou movimentar o estoque.
-- Cada entrada ou saída atualiza o saldo e cria o histórico na mesma transação.
+- Cada compra ou venda atualiza o saldo, os lotes PEPS e o histórico na mesma transação.
+- Valores monetários são armazenados em centavos para evitar erros de arredondamento.
+- O custo do estoque anterior à funcionalidade financeira deve ser configurado em cada produto; enquanto isso, o relatório identifica o lucro como incompleto.
 - O sistema não permite saída que deixe o estoque negativo.
 - Produtos e movimentações não podem ser apagados pelo aplicativo.
 - Use **Exportar CSV** periodicamente para manter uma cópia local do saldo.

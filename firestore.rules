@@ -11,23 +11,33 @@ service cloud.firestore {
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
-          'name', 'quantity', 'lowStockThreshold', 'createdAt', 'updatedAt'
+          'name', 'quantity', 'lowStockThreshold', 'costLots', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.name is string
         && request.resource.data.quantity is int
         && request.resource.data.quantity >= 0
         && request.resource.data.lowStockThreshold is int
-        && request.resource.data.lowStockThreshold >= 0;
+        && request.resource.data.lowStockThreshold >= 0
+        && request.resource.data.costLots is list;
 
       allow update: if signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'quantity', 'updatedAt', 'lastMovementId'
+          'quantity', 'costLots', 'lastPurchaseCostCents', 'salePriceCents',
+          'updatedAt', 'lastMovementId'
         ])
         && request.resource.data.quantity is int
         && request.resource.data.quantity >= 0
-        && request.resource.data.lastMovementId is string
-        && getAfter(/databases/$(database)/documents/movements/$(request.resource.data.lastMovementId)).data.itemId == itemId
-        && getAfter(/databases/$(database)/documents/movements/$(request.resource.data.lastMovementId)).data.after == request.resource.data.quantity;
+        && request.resource.data.costLots is list
+        && (!request.resource.data.keys().hasAny(['lastPurchaseCostCents']) || request.resource.data.lastPurchaseCostCents is int)
+        && (!request.resource.data.keys().hasAny(['salePriceCents']) || request.resource.data.salePriceCents is int)
+        && (
+          request.resource.data.quantity == resource.data.quantity
+          || (
+            request.resource.data.lastMovementId is string
+            && getAfter(/databases/$(database)/documents/movements/$(request.resource.data.lastMovementId)).data.itemId == itemId
+            && getAfter(/databases/$(database)/documents/movements/$(request.resource.data.lastMovementId)).data.after == request.resource.data.quantity
+          )
+        );
 
       allow delete: if false;
     }
@@ -37,7 +47,9 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           'itemId', 'itemName', 'kind', 'quantity', 'before', 'after',
-          'note', 'uid', 'userEmail', 'createdAt'
+          'note', 'uid', 'userEmail', 'createdAt', 'unitCostCents',
+          'salePriceCents', 'totalRevenueCents', 'totalCostCents',
+          'uncostedQuantity'
         ])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.kind in ['entrada', 'saida']
@@ -51,10 +63,29 @@ service cloud.firestore {
         && request.resource.data.note.size() <= 160
         && get(/databases/$(database)/documents/items/$(request.resource.data.itemId)).data.quantity == request.resource.data.before
         && getAfter(/databases/$(database)/documents/items/$(request.resource.data.itemId)).data.quantity == request.resource.data.after
+        && request.resource.data.totalCostCents is int
+        && request.resource.data.totalCostCents >= 0
         && (
-          (request.resource.data.kind == 'entrada' && request.resource.data.after == request.resource.data.before + request.resource.data.quantity)
+          (
+            request.resource.data.kind == 'entrada'
+            && request.resource.data.keys().hasAll(['unitCostCents', 'totalCostCents'])
+            && request.resource.data.unitCostCents is int
+            && request.resource.data.unitCostCents > 0
+            && request.resource.data.totalCostCents == request.resource.data.unitCostCents * request.resource.data.quantity
+            && request.resource.data.after == request.resource.data.before + request.resource.data.quantity
+          )
           ||
-          (request.resource.data.kind == 'saida' && request.resource.data.after == request.resource.data.before - request.resource.data.quantity)
+          (
+            request.resource.data.kind == 'saida'
+            && request.resource.data.keys().hasAll(['salePriceCents', 'totalRevenueCents', 'totalCostCents', 'uncostedQuantity'])
+            && request.resource.data.salePriceCents is int
+            && request.resource.data.salePriceCents > 0
+            && request.resource.data.totalRevenueCents == request.resource.data.salePriceCents * request.resource.data.quantity
+            && request.resource.data.uncostedQuantity is int
+            && request.resource.data.uncostedQuantity >= 0
+            && request.resource.data.uncostedQuantity <= request.resource.data.quantity
+            && request.resource.data.after == request.resource.data.before - request.resource.data.quantity
+          )
         );
       allow update, delete: if false;
     }

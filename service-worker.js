@@ -1,4 +1,4 @@
-const CACHE = "estoque-vet-v1";
+const CACHE = "estoque-vet-v2";
 const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./firebase-config.js", "./initial-stock.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {

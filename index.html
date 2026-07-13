@@ -65,7 +65,7 @@
               <p class="eyebrow">Visão geral</p>
               <h1>Estoque</h1>
             </div>
-            <button id="export-button" class="button secondary" type="button">Exportar CSV</button>
+            <button id="export-button" class="button secondary" type="button">Exportar estoque</button>
           </div>
 
           <section class="summary-grid" aria-label="Resumo do estoque">
@@ -77,6 +77,7 @@
           <nav class="tabs" aria-label="Seções">
             <button class="tab active" data-tab="inventory" type="button">Produtos</button>
             <button class="tab" data-tab="history" type="button">Histórico</button>
+            <button class="tab" data-tab="reports" type="button">Relatórios</button>
           </nav>
 
           <section id="inventory-panel" class="panel">
@@ -101,6 +102,30 @@
             <div id="history-list" class="history-list"></div>
             <p id="empty-history" class="empty-message hidden">Ainda não há movimentações.</p>
           </section>
+
+          <section id="reports-panel" class="panel hidden">
+            <div class="report-toolbar">
+              <div>
+                <h2>Relatório de vendas</h2>
+                <p class="muted">Faturamento, custo PEPS e lucro bruto.</p>
+              </div>
+              <div class="period-buttons" aria-label="Período do relatório">
+                <button class="period-button active" data-period="day" type="button">Hoje</button>
+                <button class="period-button" data-period="week" type="button">Semana</button>
+                <button class="period-button" data-period="month" type="button">Mês</button>
+              </div>
+            </div>
+            <section class="report-summary" aria-label="Resumo das vendas">
+              <article><span>Unidades vendidas</span><strong id="report-units">0</strong></article>
+              <article><span>Faturamento</span><strong id="report-revenue">R$ 0,00</strong></article>
+              <article><span>Custo PEPS</span><strong id="report-cost">R$ 0,00</strong></article>
+              <article><span>Lucro bruto</span><strong id="report-profit">R$ 0,00</strong></article>
+            </section>
+            <p id="report-warning" class="report-warning hidden"></p>
+            <div id="report-list" class="report-list"></div>
+            <p id="empty-report" class="empty-message hidden">Nenhuma venda neste período.</p>
+            <button id="export-report-button" class="button secondary report-export" type="button">Exportar relatório CSV</button>
+          </section>
         </div>
       </section>
     </main>
@@ -116,12 +141,39 @@
         <input id="movement-kind" type="hidden" />
         <label for="movement-quantity">Quantidade</label>
         <input id="movement-quantity" type="number" min="1" step="1" inputmode="numeric" required />
+        <div id="movement-price-fields">
+          <label id="movement-price-label" for="movement-price">Valor unitário</label>
+          <div class="money-input"><span>R$</span><input id="movement-price" type="text" inputmode="decimal" placeholder="0,00" required /></div>
+          <p id="purchase-comparison" class="price-comparison hidden"></p>
+        </div>
         <label for="movement-note">Observação <span class="optional">(opcional)</span></label>
         <textarea id="movement-note" rows="3" maxlength="160" placeholder="Ex.: compra do fornecedor ou uso em atendimento"></textarea>
         <p id="movement-error" class="form-error" role="alert"></p>
         <div class="dialog-actions">
           <button id="cancel-movement" class="button secondary" type="button">Cancelar</button>
           <button id="confirm-movement" class="button primary" type="submit">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="product-dialog" class="dialog">
+      <form id="product-form" method="dialog">
+        <div class="dialog-header">
+          <div><p class="eyebrow">Configurar produto</p><h2 id="product-dialog-name"></h2></div>
+          <button id="close-product-dialog" class="icon-button" type="button" aria-label="Fechar">×</button>
+        </div>
+        <input id="product-item-id" type="hidden" />
+        <label for="product-sale-price">Preço de venda padrão</label>
+        <div class="money-input"><span>R$</span><input id="product-sale-price" type="text" inputmode="decimal" placeholder="0,00" /></div>
+        <div id="initial-cost-field">
+          <label for="product-initial-cost">Custo unitário do estoque atual</label>
+          <div class="money-input"><span>R$</span><input id="product-initial-cost" type="text" inputmode="decimal" placeholder="0,00" /></div>
+          <p class="field-help">Necessário para calcular pelo PEPS o lucro das unidades que já estavam cadastradas.</p>
+        </div>
+        <p id="product-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="cancel-product" class="button secondary" type="button">Cancelar</button>
+          <button id="save-product" class="button primary" type="submit">Salvar</button>
         </div>
       </form>
     </dialog>
