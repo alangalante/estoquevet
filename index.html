@@ -65,7 +65,10 @@
               <p class="eyebrow">Visão geral</p>
               <h1>Estoque</h1>
             </div>
-            <button id="export-button" class="button secondary" type="button">Exportar estoque</button>
+            <div class="heading-actions">
+              <button id="new-product-button" class="button primary" type="button">+ Novo produto</button>
+              <button id="export-button" class="button secondary" type="button">Exportar estoque</button>
+            </div>
           </div>
 
           <section class="summary-grid" aria-label="Resumo do estoque">
@@ -159,10 +162,14 @@
     <dialog id="product-dialog" class="dialog">
       <form id="product-form" method="dialog">
         <div class="dialog-header">
-          <div><p class="eyebrow">Configurar produto</p><h2 id="product-dialog-name"></h2></div>
+          <div><p id="product-dialog-eyebrow" class="eyebrow">Produto</p><h2 id="product-dialog-name"></h2></div>
           <button id="close-product-dialog" class="icon-button" type="button" aria-label="Fechar">×</button>
         </div>
         <input id="product-item-id" type="hidden" />
+        <label for="product-name">Nome</label>
+        <input id="product-name" type="text" maxlength="100" required autocomplete="off" />
+        <label for="product-low-threshold">Limite de estoque baixo</label>
+        <input id="product-low-threshold" type="number" min="0" step="1" inputmode="numeric" required />
         <label for="product-sale-price">Preço de venda padrão</label>
         <div class="money-input"><span>R$</span><input id="product-sale-price" type="text" inputmode="decimal" placeholder="0,00" /></div>
         <div id="initial-cost-field">
@@ -172,6 +179,7 @@
         </div>
         <p id="product-error" class="form-error" role="alert"></p>
         <div class="dialog-actions">
+          <button id="delete-product" class="button danger hidden" type="button">Excluir</button>
           <button id="cancel-product" class="button secondary" type="button">Cancelar</button>
           <button id="save-product" class="button primary" type="submit">Salvar</button>
         </div>

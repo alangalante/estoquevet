@@ -68,6 +68,8 @@ function startFirebase() {
   $("#seed-button").addEventListener("click", () => seedInventory(db));
   $("#movement-form").addEventListener("submit", (event) => submitMovement(event, db));
   $("#product-form").addEventListener("submit", (event) => saveProduct(event, db));
+  $("#new-product-button").addEventListener("click", () => openProduct());
+  $("#delete-product").addEventListener("click", () => deleteProduct(db));
 }
 
 function stopListeners() {
@@ -197,26 +199,42 @@ async function submitMovement(event, db) {
   finally { button.disabled = false; button.textContent = kind === "entrada" ? "Confirmar compra" : "Confirmar venda"; }
 }
 
-function openProduct(itemId) {
-  const item = state.items.find((candidate) => candidate.id === itemId); if (!item) return;
-  $("#product-form").reset(); $("#product-item-id").value = item.id; $("#product-dialog-name").textContent = item.name;
-  $("#product-sale-price").value = inputMoney(item.salePriceCents); $("#product-error").textContent = "";
-  const pending = uncostedQuantity(item); $("#initial-cost-field").classList.toggle("hidden", pending === 0);
+function openProduct(itemId = "") {
+  const item = itemId ? state.items.find((candidate) => candidate.id === itemId) : null; if (itemId && !item) return;
+  $("#product-form").reset(); $("#product-item-id").value = item?.id || "";
+  $("#product-dialog-eyebrow").textContent = item ? "Editar produto" : "Cadastrar produto";
+  $("#product-dialog-name").textContent = item?.name || "Novo produto";
+  $("#product-name").value = item?.name || ""; $("#product-low-threshold").value = item?.lowStockThreshold ?? 2;
+  $("#product-sale-price").value = inputMoney(item?.salePriceCents); $("#product-error").textContent = "";
+  const pending = item ? uncostedQuantity(item) : 0; $("#initial-cost-field").classList.toggle("hidden", !item || pending === 0);
   $("#initial-cost-field .field-help").textContent = `Este custo será aplicado às ${pending} unidades atuais ainda sem custo.`;
+  $("#delete-product").classList.toggle("hidden", !item); $("#delete-product").disabled = Boolean(item?.quantity);
+  $("#delete-product").title = item?.quantity ? "Zere o saldo antes de excluir" : "Excluir produto";
   $("#product-dialog").showModal();
 }
 
 async function saveProduct(event, db) {
   event.preventDefault();
-  const itemId = $("#product-item-id").value, salePriceCents = parseMoney($("#product-sale-price").value), initialCostCents = parseMoney($("#product-initial-cost").value);
+  const itemId = $("#product-item-id").value, name = $("#product-name").value.trim(), lowStockThreshold = Number.parseInt($("#product-low-threshold").value, 10);
+  const salePriceCents = parseMoney($("#product-sale-price").value), initialCostCents = parseMoney($("#product-initial-cost").value);
   const button = $("#save-product"); $("#product-error").textContent = "";
+  if (!name) return void ($("#product-error").textContent = "Informe o nome do produto.");
+  if (!Number.isInteger(lowStockThreshold) || lowStockThreshold < 0) return void ($("#product-error").textContent = "Informe um limite inteiro igual ou maior que zero.");
   if (salePriceCents !== null && (!Number.isInteger(salePriceCents) || salePriceCents <= 0)) return void ($("#product-error").textContent = "Informe um preço de venda válido.");
   if (initialCostCents !== null && (!Number.isInteger(initialCostCents) || initialCostCents <= 0)) return void ($("#product-error").textContent = "Informe um custo inicial válido.");
   button.disabled = true; button.textContent = "Salvando...";
   try {
+    const duplicate = state.items.some((item) => item.id !== itemId && item.name.localeCompare(name, "pt-BR", { sensitivity: "base" }) === 0);
+    if (duplicate) throw new Error("Já existe um produto com esse nome.");
+    if (!itemId) {
+      const itemRef = doc(collection(db, "items")), data = { name, quantity: 0, lowStockThreshold, costLots: [], createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+      if (salePriceCents !== null) data.salePriceCents = salePriceCents;
+      const batch = writeBatch(db); batch.set(itemRef, data); await batch.commit();
+      $("#product-dialog").close(); showToast("Produto cadastrado."); return;
+    }
     await runTransaction(db, async (transaction) => {
       const itemRef = doc(db, "items", itemId), snapshot = await transaction.get(itemRef); if (!snapshot.exists()) throw new Error("Produto não encontrado.");
-      const item = snapshot.data(), pending = uncostedQuantity(item), update = { costLots: item.costLots || [], updatedAt: serverTimestamp() };
+      const item = snapshot.data(), pending = uncostedQuantity(item), update = { name, lowStockThreshold, costLots: item.costLots || [], updatedAt: serverTimestamp() };
       if (salePriceCents !== null) update.salePriceCents = salePriceCents;
       if (initialCostCents !== null && pending > 0) {
         update.costLots = [{ quantity: pending, unitCostCents: initialCostCents, movementId: "estoque-inicial" }, ...(item.costLots || [])];
@@ -227,6 +245,23 @@ async function saveProduct(event, db) {
     $("#product-dialog").close(); showToast("Produto atualizado.");
   } catch (error) { $("#product-error").textContent = error.message || "Não foi possível atualizar o produto."; }
   finally { button.disabled = false; button.textContent = "Salvar"; }
+}
+
+async function deleteProduct(db) {
+  const itemId = $("#product-item-id").value, item = state.items.find((candidate) => candidate.id === itemId); if (!item) return;
+  if (item.quantity !== 0) return void ($("#product-error").textContent = "Zere o saldo do produto antes de excluí-lo.");
+  if (!window.confirm(`Excluir “${item.name}”? O histórico de movimentações será preservado.`)) return;
+  const button = $("#delete-product"); button.disabled = true; button.textContent = "Excluindo...";
+  try {
+    await runTransaction(db, async (transaction) => {
+      const itemRef = doc(db, "items", itemId), snapshot = await transaction.get(itemRef);
+      if (!snapshot.exists()) throw new Error("Produto não encontrado.");
+      if (snapshot.data().quantity !== 0) throw new Error("Zere o saldo do produto antes de excluí-lo.");
+      transaction.delete(itemRef);
+    });
+    $("#product-dialog").close(); showToast("Produto excluído.");
+  } catch (error) { $("#product-error").textContent = error.message || "Não foi possível excluir o produto."; }
+  finally { button.disabled = false; button.textContent = "Excluir"; }
 }
 
 function reportStart(period) {
