@@ -135,6 +135,10 @@ input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px 
 .dialog-header h2 { margin: 0; }
 .stock-line { padding: 11px 13px; border-radius: 9px; color: var(--muted); background: var(--wash); }
 .money-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
+.product-current-stock { display: grid; gap: 3px; margin: 18px 0 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--green-soft); }
+.product-current-stock span { color: var(--muted); font-size: .84rem; }
+.product-current-stock strong { color: var(--green); font-size: 1.25rem; }
+.product-current-stock small { margin-top: 5px; color: var(--muted); line-height: 1.4; }
 .money-input:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 107, 91, .12); }
 .money-input span { padding-left: 14px; color: var(--muted); }
 .money-input input { border: 0; box-shadow: none; }

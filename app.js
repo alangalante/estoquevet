@@ -204,6 +204,8 @@ function openProduct(itemId = "") {
   $("#product-form").reset(); $("#product-item-id").value = item?.id || "";
   $("#product-dialog-eyebrow").textContent = item ? "Editar produto" : "Cadastrar produto";
   $("#product-dialog-name").textContent = item?.name || "Novo produto";
+  $("#product-current-stock").classList.toggle("hidden", !item);
+  $("#product-current-quantity").textContent = `${Number(item?.quantity || 0).toLocaleString("pt-BR")} ${item?.quantity === 1 ? "unidade" : "unidades"}`;
   $("#product-name").value = item?.name || ""; $("#product-low-threshold").value = item?.lowStockThreshold ?? 2;
   $("#product-sale-price").value = inputMoney(item?.salePriceCents); $("#product-error").textContent = "";
   const pending = item ? uncostedQuantity(item) : 0; $("#initial-cost-field").classList.toggle("hidden", !item || pending === 0);

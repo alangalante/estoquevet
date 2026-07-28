@@ -166,10 +166,16 @@
           <button id="close-product-dialog" class="icon-button" type="button" aria-label="Fechar">×</button>
         </div>
         <input id="product-item-id" type="hidden" />
+        <div id="product-current-stock" class="product-current-stock hidden">
+          <span>Quantidade em estoque</span>
+          <strong id="product-current-quantity">0 unidades</strong>
+          <small>Para alterar esta quantidade, use os botões <b>+ Compra</b> ou <b>− Venda</b> na lista de produtos.</small>
+        </div>
         <label for="product-name">Nome</label>
         <input id="product-name" type="text" maxlength="100" required autocomplete="off" />
-        <label for="product-low-threshold">Limite de estoque baixo</label>
+        <label for="product-low-threshold">Avisar quando o estoque chegar a</label>
         <input id="product-low-threshold" type="number" min="0" step="1" inputmode="numeric" required />
+        <p class="field-help">Este número é apenas o limite do alerta de estoque baixo; ele não altera a quantidade do produto.</p>
         <label for="product-sale-price">Preço de venda padrão</label>
         <div class="money-input"><span>R$</span><input id="product-sale-price" type="text" inputmode="decimal" placeholder="0,00" /></div>
         <div id="initial-cost-field">
